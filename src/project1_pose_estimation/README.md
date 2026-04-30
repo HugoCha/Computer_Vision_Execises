@@ -36,6 +36,6 @@ Visual output should include:
 # Image Comparison
 
 <div style="display: flex; justify-content: space-around">
-  <img src="data/raw/img0.jpg" alt="Raw Image" width="45%" />
+  <img src="/data/raw/img0.jpg" alt="Raw Image" width="45%" />
   <img src="data/processed/img0.jpg" alt="Processed Image" width="45%" />
 </div>
