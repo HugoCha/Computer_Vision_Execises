@@ -21,7 +21,7 @@ For each detected object:
 Object 1
 Center: (320, 180)
 Angle: 42°
-Grasp point: (318, 176)
+Axis: (10, 0)
 ```
 
 Visual output should include:
@@ -29,5 +29,4 @@ Visual output should include:
  - contour
  - center point
  - orientation axis
- - grasp direction
  - rotated bounding box
