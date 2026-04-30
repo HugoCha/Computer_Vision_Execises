@@ -90,7 +90,7 @@ Thumbs.db
 *.json
 *.pkl
 *.h5
-data/
+data/ignored/
 dataset/
 
 # Build tools
