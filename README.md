@@ -5,8 +5,8 @@ Projects for industrial computer vision and robotics training.
 ## Projects
 
 - Object pose estimation
-- Surface defect detection
 - ArUco marker pose estimation
+- Surface defect detection
 - Classical ML defect classification
 
 ## Installation
