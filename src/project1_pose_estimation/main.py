@@ -2,11 +2,12 @@
 import os
 
 from cv2.typing import MatLike
+from src.common.object_pose import ObjectPose
 from src.common.utils import *
 from src.common.visualization import *
 from .config import *
 
-object_poses:List[object_pose] = []
+object_poses:List[ObjectPose] = []
 
 def remove_shadow(image:MatLike) -> MatLike:
     # Convert to LAB color space
@@ -24,6 +25,7 @@ def remove_shadow(image:MatLike) -> MatLike:
     return result
 
 def process( img:MatLike ) -> MatLike:
+    object_poses.clear()
     gray = grayscale( img )
     blur = cv2.GaussianBlur(gray,(7,7),0)
     th = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,21,4 )
@@ -92,14 +94,15 @@ def process( img:MatLike ) -> MatLike:
                 -1
             )
 
-            object_poses.append( object_pose( center ) )
+            object_poses.append( ObjectPose( center, box ) )
         else:
             result = get_orientation(hull)
 
             if result is None:
                 continue
-
-            pose = result
+            
+            center, angle, axis = result
+            pose:ObjectPose = ObjectPose( center, box, angle, axis )
             object_poses.append( pose )
 
             cv2.circle(
@@ -135,8 +138,8 @@ def main():
     processed_path = os.path.join( DATA_PROCESSED_PATH, "img" + str(IMAGE_INDEX) + ".jpg" )
 
     #capture_video( CAMERA_INDEX, process )
-    capture_image( CAMERA_INDEX, img_raw_path, processed_path, process )
-    #load_image( img_raw_path, processed_path, process )
+    #capture_image( CAMERA_INDEX, img_raw_path, processed_path, process )
+    load_image( img_raw_path, processed_path, process )
     for obj in object_poses:
         print( obj )
 

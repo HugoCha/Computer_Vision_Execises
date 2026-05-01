@@ -56,13 +56,15 @@ def capture_image( camera_index:int,
             processed = func( frame )
             if ( process_img_path is not None ):
                 cv2.imwrite(process_img_path, processed)
-                
+
             show_image( processed )
 
     cap.release()
     cv2.destroyAllWindows()
 
-def capture_video( camera_index:int, func:Optional[Callable[[MatLike], MatLike]] = None ):
+def capture_video( camera_index:int, 
+                   process_img:Optional[Callable[[MatLike], MatLike]] = None,
+                   process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] = None ):
     cap = cv2.VideoCapture(camera_index)
 
     if not cap.isOpened():
@@ -71,9 +73,10 @@ def capture_video( camera_index:int, func:Optional[Callable[[MatLike], MatLike]]
 
     while True:
         ret, frame = cap.read()
+        img = None
         if ret:
-            if ( func is not None ):
-                img = func( frame )
+            if ( process_img is not None ):
+                img = process_img( frame )
             else:
                 img = frame
 
@@ -82,8 +85,13 @@ def capture_video( camera_index:int, func:Optional[Callable[[MatLike], MatLike]]
         else:
             print("Error: Could not capture frame.")
 
-        if cv2.waitKey(1) == ord('q'):
+        key = cv2.waitKey(1)
+        if key == ord('q'):
             break
+        elif key < 0:
+            continue 
+        elif process_key:
+            process_key( key, frame, img )
 
     cap.release()
     cv2.destroyAllWindows()
