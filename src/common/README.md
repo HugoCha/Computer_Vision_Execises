@@ -13,14 +13,14 @@ python -m src.common.camera_calibration
 Command menu:
 
 ```bash
-  -h, --help            show this help message and exit
-  --camera CAMERA       Camera index. (default: -1)
-  --chessboard-path CHESSBOARD_PATH
-                        Folder path to chessboard files (default: None)
-  --chessboard WIDTH HEIGHT
-                        Optional chessboard dimensions as (WIDTH, HEIGHT) (default: (8, 8))
-  --output-path OUTPUT_PATH
-                        Folder path to save the camera calibration file. (default: current directory)
+-h, --help            show this help message and exit
+--camera CAMERA       Camera index. (default: -1)
+--chessboard-path CHESSBOARD_PATH
+                    Folder path to chessboard files (default: None)
+--chessboard WIDTH HEIGHT
+                    Optional chessboard dimensions as (WIDTH, HEIGHT) (default: (8, 8))
+--output-path OUTPUT_PATH
+                    Folder path to save the camera calibration file. (default: current directory)
 ```
 
 For example, run live camera calibration:
