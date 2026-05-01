@@ -27,3 +27,9 @@ Visual output should include:
 Data output should include:
 
  - camera coordinates into robot coordinates using hand-eye calibration.
+
+ ## Result
+
+ <div style="display: flex; justify-content: space-around">
+  <img src="/data/processed/project2/img.jpg" alt="Processed Image" />
+</div>

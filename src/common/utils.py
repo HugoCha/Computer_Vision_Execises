@@ -2,7 +2,6 @@
 
 import cv2
 import numpy as np
-import os
 
 from cv2.typing import MatLike
 
@@ -105,10 +104,3 @@ def mask_background(
     img_with_mask = cv2.add(uniform_bg, foreground)
 
     return img_with_mask
-
-def get_files_by_extension(directory: str, extension: str) -> list[str]:
-    return [
-        os.path.join(directory, f)
-        for f in os.listdir(directory)
-        if f.endswith(extension)
-    ] 

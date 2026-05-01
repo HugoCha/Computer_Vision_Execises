@@ -31,9 +31,9 @@ class Camera:
 
     def __str__( self ) -> str:
         return (
-            f"Matrix:\n{self.matrix}"
-            f"Distortion:\n{self.distortion}"
-            f"Rvecs:\n{self.rvecs}"
+            f"Matrix:\n{self.matrix}\n"
+            f"Distortion:\n{self.distortion}\n"
+            f"Rvecs:\n{self.rvecs}\n"
             f"Tvecs:\n{self.tvecs}"
         )
 

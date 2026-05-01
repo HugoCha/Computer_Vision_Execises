@@ -7,42 +7,100 @@ import os
 from typing import Optional
 from cv2.typing import MatLike
 
+from src.common.camera import Camera
 from src.common.visualization import show_image
 
-from .config import DATA_RAW_PATH, MARKER_DICTIONARY, MARKER_IDS, MARKER_SIZE
+from .config import *
 
 marker_dict = cv2.aruco.getPredefinedDictionary( MARKER_DICTIONARY ) 
 
+class MarkerPose:
+    def __init__( self, rvec:MatLike, tvec:MatLike, pts:MatLike ):
+        self.rvec = rvec
+        self.tvec = tvec
+        self.pts = pts
+
+        R, _ = cv2.Rodrigues(rvec)
+        transform = np.eye(4)
+        transform[:3, :3] = R
+        transform[:3, 3] = tvec.flatten()
+        self.transform__ = transform
+
+        inverse_transform = np.eye(4)
+        inverse_transform[:3, :3] = R.T
+        inverse_transform[:3, 3] = -R.T @ tvec.reshape(3,)
+        self.inverse_transform__ = inverse_transform
+
+    @property
+    def transform( self ):
+        return self.transform__
+    
+    @property
+    def inverse_transform( self ):
+        return self.inverse_transform__
+    
+    def __str__( self ) -> str:
+        return f"{self.transform}"
+    
 class Marker:
-    def __init__( self, id:int, corner: Optional[MatLike] = None ):
-        self.corner = corner
+    def __init__( self, id:int, corners: Optional[MatLike] = None, camera:Optional[Camera] = None ):
+        self.corners = corners
         self.id = int(id)
+        self.camera = camera
+        self.marker_pose__:Optional[MarkerPose] = None
         self.img__: Optional[MatLike] = None
 
     def image( self ) -> MatLike:
         if ( self.img__ is None ):
-            self.img__ = cv2.aruco.generateImageMarker( marker_dict, self.id, MARKER_SIZE )
+            self.img__ = cv2.aruco.generateImageMarker( marker_dict, self.id, MARKER_SIZE_MM )
         return self.img__
 
     def show( self ):
         show_image( self.image(), "marker" + str(self.id) )
 
     def draw( self, img:MatLike ) -> MatLike:
-        if ( self.corner is not None ):
+        if ( self.corners is not None ):
             
-            corners_list = [self.corner.astype(np.float32)]
+            corners_list = [self.corners.astype(np.float32)]
             ids_array = np.array([[int(self.id)]], dtype=np.int32)
             cv2.aruco.drawDetectedMarkers(img, corners_list, ids_array)
 
+            marker_pose = self.marker_pose()
+            if ( marker_pose is not None and 
+                 self.camera is not None ):
+                cv2.drawFrameAxes(\
+                    img,\
+                    self.camera.matrix,\
+                    self.camera.distortion, 
+                    marker_pose.rvec, 
+                    marker_pose.tvec, 
+                    0.1 )  
         return img
+
+    def marker_pose( self ) -> Optional[MarkerPose]:
+        if ( self.marker_pose__ is None and 
+             self.corners is not None and 
+             self.camera is not None ):
+            corners = self.corners
+            rvec, tvec, marker_pts =\
+                cv2.aruco.estimatePoseSingleMarkers(\
+                    [corners],\
+                    MARKER_SIZE_MM * 1e-3,\
+                    self.camera.matrix,\
+                    self.camera.distortion )
+            self.marker_pose__ = MarkerPose( rvec, tvec, marker_pts )
+        return self.marker_pose__
 
     def save( self, path:str ):
         cv2.imwrite( os.path.join( path, "marker" + str( self.id ) + ".png" ), self.image() )
 
     def __str__( self ) -> str:
-        return f"id: {self.id}, corner: {self.corner}"
+        return ( 
+            f"id: {self.id}, corner: {self.corners}\n"
+            f"pose:\n{self.marker_pose()}"
+        )
 
-def detect_markers( img:MatLike ) -> list[Marker]:
+def detect_markers( img:MatLike, camera:Optional[Camera] = None ) -> list[Marker]:
     detector_parameters = cv2.aruco.DetectorParameters()
     (corners, ids, _) = cv2.aruco.detectMarkers(
         img, 
@@ -52,7 +110,7 @@ def detect_markers( img:MatLike ) -> list[Marker]:
     markers:list[Marker] = []
 
     for i in range(len(corners)):
-        marker = Marker( ids[i][0], corners[i] )
+        marker = Marker( ids[i][0], corners[i], camera )
         markers.append( marker )
 
     return markers

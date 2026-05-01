@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+from enum import Enum
 import cv2
 import numpy as np
 import os
@@ -9,11 +10,15 @@ from typing import Callable, Optional, Sequence, Tuple
 
 from cv2.typing import MatLike
 
+from src.common.colors import Colors
 from src.common.camera import Camera
-from src.common.utils import get_files_by_extension, grayscale
+from src.common.file_utils import get_files_by_extension, is_path_valid
+from src.common.utils import grayscale
 from src.common.visualization import capture_video, show_image
 
 DEFAULT_CHESSBOARD=(8,8)
+
+
 
 class CameraCalibrationParameters:
     def __init__( self, 
@@ -81,24 +86,72 @@ class LiveCameraCalibrationMenu:
             return None
         
         img_index = len(self.parameters.chessboard_images)
-        img_fname = "chessboard_" + str(img_index) + ".json" 
+        img_fname = "chessboard_" + str(img_index) + ".jpg" 
         img_fpath = os.path.join( self.parameters.chessboard_path, img_fname )
+        
+        os.makedirs(self.parameters.chessboard_path, exist_ok=True )
+        
         if ( cv2.imwrite( img_fpath, img ) ):
+            self.add( img )
             print( f"Chessboard img saved at: {img_fpath}" )
         else:
             print( f"Failed to save img at: {img_fpath}" )
 
     def menu( self ) -> str:
         return ( 
+            f"========================\n"
             f"Camera calibration menu:\n"
+            f"========================\n"
             f"'h': Display menu\n"
             f"'p': Display calibration parameters\n"
             f"'a': Add image to calibration images\n"
             f"'r': Remove last image from calibration images\n"
-            f"'s': Add and Save image to file in {self.parameters.chessboard_path}"
-            f"'q': Quit and Save calibration file in {self.parameters.calibration_path}"
+            f"'s': Add and Save image to file in {self.parameters.chessboard_path}\n"
+            f"'q': Quit and Save calibration file in {self.parameters.calibration_path}\n"
+            f"========================\n"
         )
-    
+
+class CameraCalibrationScore:
+    class ScoreQuality( Enum ):
+        EXCELLENT   =(0.3, Colors.BG_GREEN)
+        GOOD        =(0.8, Colors.BG_BLUE)
+        ACCEPTABLE  =(1.5, Colors.BG_YELLOW)
+        POOR        =(2.0, Colors.BG_RED)
+
+    def __init__( self, camera: Camera, 
+                  points3d: Sequence[MatLike], 
+                  pixels2d: Sequence[MatLike] ):
+        self.score__ = CameraCalibrationScore.reprojection_error( camera, points3d, pixels2d )
+        
+        if self.score__ < self.ScoreQuality.EXCELLENT.value[0]:
+            self.score_quality__ = self.ScoreQuality.EXCELLENT
+        elif self.score__ < self.ScoreQuality.GOOD.value[0]:
+            self.score_quality__ = self.ScoreQuality.GOOD
+        elif self.score__ < self.ScoreQuality.ACCEPTABLE.value[0]:
+            self.score_quality__ = self.ScoreQuality.ACCEPTABLE
+        else:
+            self.score_quality__ = self.ScoreQuality.POOR
+
+    @property
+    def score( self ) -> float:
+        return self.score__
+
+    @property
+    def score_quality( self ) -> ScoreQuality:
+        return self.score_quality__
+
+    def __str__( self ) -> str:
+        return f"{Colors.BOLD}{self.score_quality.value[1]}calibration score: {self.score} ({self.score_quality.name}){Colors.RESET}"
+
+    @staticmethod
+    def reprojection_error( camera:Camera, objpoints:Sequence[MatLike], imgpoints:Sequence[MatLike] ) -> float:
+        mean_error = 0
+        for i in range(len(objpoints)):
+            imgpoints2, _ = cv2.projectPoints(objpoints[i], camera.rvecs[i], camera.tvecs[i], camera.matrix, camera.distortion )
+            error = cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2SQR) / len(imgpoints2)
+            mean_error += error
+        mean_error = np.sqrt(mean_error/len(objpoints))
+        return mean_error
 
 class CameraCalibration:
     @staticmethod
@@ -109,10 +162,10 @@ class CameraCalibration:
         if ( parameters.chessboard_image_count() <= 0 ):
             print( "Invalid calibration parameters: No chessboard images" )
             return False
-        if ( not os.path.exists( parameters.calibration_path ) ):
+        if ( not is_path_valid( parameters.calibration_path ) ):
             print( f"Invalid calibration parameters: Invalid save path {parameters.calibration_path}" )
             return False
-        if ( not parameters.chessboard_path or not os.path.exists( parameters.chessboard_path ) ):
+        if ( not is_path_valid( parameters.chessboard_path ) ):
             print( f"Unable to save chessboard img to {parameters.chessboard_path}" )
 
         return True
@@ -144,7 +197,7 @@ class CameraCalibration:
             if ( parameters.show_corner_image ):
                 show_image( corner_img, "corners" )
 
-        if not objpoints or not imgpoints is None:
+        if len(objpoints) == 0 or len(imgpoints) == 0:
             print( f"Camera calibration failed: Unable to extract points from images" )
             return None
 
@@ -153,14 +206,21 @@ class CameraCalibration:
 
         if ret:
             camera = Camera(matrix, distortion, r_vecs, t_vecs)
-            camera.save_to_json( os.path.join( parameters.save_path, "camera.json" ) )
+            calibration_path = parameters.calibration_path
+            os.makedirs( calibration_path, exist_ok=True )
+
+            camera_fname = "camera.json"
+            camera_fpath = os.path.join( parameters.calibration_path, camera_fname )
+            camera.save_to_json( camera_fpath )
+            calibration_score = CameraCalibrationScore( camera, objpoints, imgpoints )
             print( 
                 f"=========================\n"
                 f"Camera calibration result\n"
                 f"=========================\n"
+                f"{calibration_score}\n"
                 f"{camera}"
             )
-            print( f"Camera calibration file saved to: {parameters.save_path}")
+            print( f"Camera calibration file saved to: {camera_fpath}")
         else:
             print( f"Camera calibration failed:\n{parameters}")
 
@@ -205,7 +265,8 @@ class CameraCalibration:
 
         if ret:
             corners = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
-            corners_img = cv2.drawChessboardCorners( img, parameters.chessboard, corners, True )
+            corners_img = img.copy()
+            corners_img = cv2.drawChessboardCorners( corners_img, parameters.chessboard, corners, True )
             return ( corners, corners_img )
 
         return None
@@ -249,13 +310,14 @@ def parse_args():
 
     args = parser.parse_args()
 
-    dimensions = None
+    chessboard = None
     if args.chessboard:
-        dimensions = tuple(args.dimensions)
+        chessboard = tuple(args.chessboard)
 
-    return args.chessboard_path, args.camera, dimensions, args.output_path
+    return args.chessboard_path, args.camera, chessboard, args.output_path
 
 if __name__ == "__main__":
+
     chessboard_path, camera_index, chessboard, output_path = parse_args()
 
     if ( chessboard is None ):
@@ -263,7 +325,8 @@ if __name__ == "__main__":
 
     if ( chessboard_path is None ):
         camera_index = camera_index if camera_index >=0 else 0
-        
+    
+    #try:
     parameters = CameraCalibrationParameters( chessboard, chessboard_path, output_path )
     print( f"Calibration parameters:\n{parameters}")
 
@@ -273,3 +336,5 @@ if __name__ == "__main__":
     elif parameters.chessboard_path is not None:
         print(f"Chessboard Folder Path: {parameters.chessboard_path}")
         CameraCalibration.run_from_path( parameters, parameters.chessboard_path )
+    # except:
+    #     print( "Camera calibration failed" )
