@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
-from typing import Callable, Optional
-
 from abc import ABC, abstractmethod
 from cv2.typing import MatLike
+from typing import Callable, Optional
 
 class ImageProcessor(ABC):
     @abstractmethod

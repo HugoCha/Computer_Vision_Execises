@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
-from typing import Optional
-
 from cv2.typing import MatLike
+from typing import Optional
 
 class ObjectPose:
     def __init__( self, 

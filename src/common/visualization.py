@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 import os
 
-from typing import Callable, List, Optional
 from cv2.typing import MatLike
+from typing import Callable, List, Optional
 
 from src.common.file_utils import get_filename, get_files_by_extension, is_path_valid
 

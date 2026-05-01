@@ -1,21 +1,19 @@
 #!/usr/bin/python3
 
 import argparse
-from enum import Enum
 import cv2
 import numpy as np
 import os
 
-from typing import Callable, Optional, Sequence, Tuple
-
+from enum import Enum
 from cv2.typing import MatLike
+from typing import Optional, Sequence
 
-from common.launcher import Launcher, LauncherParameters
-from project2_ArUcoMarker.config import LAUNCH_OPTION
-from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
-from src.common.colors import Colors
 from src.common.camera import Camera
-from src.common.file_utils import get_files_by_extension, is_path_valid
+from src.common.colors import Colors
+from src.common.file_utils import is_path_valid
+from src.common.launcher import Launcher, LauncherParameters, LaunchOption
+from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.utils import grayscale
 from src.common.visualization import capture_video, show_image
 
@@ -44,8 +42,6 @@ class CameraCalibrationParameters:
             f"Chessboard folder: {self.chessboard_path}"
             f"Calibration folder: {self.calibration_path}"
         )
-
-
 
 class CameraCalibrationScore:
     class ScoreQuality( Enum ):
@@ -300,9 +296,9 @@ if __name__ == "__main__":
         None )
     
     if ( camera_index >= 0 ):
-        launcher_params.option = LAUNCH_OPTION.CAPTURE_VIDEO
+        launcher_params.option = LaunchOption.CAPTURE_VIDEO
     elif parameters.chessboard_path is not None:
-        launcher_params.option = LAUNCH_OPTION.LOAD_IMAGE
+        launcher_params.option = LaunchOption.LOAD_IMAGE
     else:
         print( "Camera calibration failed" )
         pass

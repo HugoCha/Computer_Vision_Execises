@@ -3,8 +3,8 @@
 import json
 import numpy as np
 
-from typing import Sequence
 from cv2.typing import MatLike
+from typing import Sequence
 
 class Camera:
     def __init__( self,

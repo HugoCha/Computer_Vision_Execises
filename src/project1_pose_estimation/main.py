@@ -1,11 +1,10 @@
 #!/usr/bin/python3
-import os
 
 from cv2.typing import MatLike
 
 from src.common.launcher import Launcher, LauncherParameters
-from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.object_pose import ObjectPose
+from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.utils import *
 from src.common.visualization import *
 
@@ -17,21 +16,6 @@ class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
         self.sub_menus__: dict[str, KeyProcessor] = {
             'p': KeyProcessor( 'p', "Display obj poses", lambda img,process : self.print_poses() )
         }
-
-    def remove_shadow( self, image:MatLike) -> MatLike:
-        # Convert to LAB color space
-        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
-
-        # Apply CLAHE to the L channel
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(20, 20))
-        l = clahe.apply(l)
-
-        # Merge back
-        lab = cv2.merge((l, a, b))
-        result = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
-
-        return result
 
     def process_img( self, img:MatLike ) -> MatLike:
         self.object_poses.clear()
