@@ -3,7 +3,11 @@
 In order to run camera calibration use
 
 ```bash
-python -m src.common.camera_calibration [--camera CAMERA] [--chessboard-path CHESSBOARD_PATH] [--chessboard WIDTH HEIGHT] [--output-path OUTPUT_PATH]
+python -m src.common.camera_calibration
+    \[--camera CAMERA]
+    \ [--chessboard-path CHESSBOARD_PATH]
+    \[--chessboard WIDTH HEIGHT]
+    \[--output-path OUTPUT_PATH]
 ```
 
 Command menu:
