@@ -14,7 +14,7 @@ Command menu:
 
 ```bash
   -h, --help            show this help message and exit
-  --camera CAMERA       Camera index. (default: 0)
+  --camera CAMERA       Camera index. (default: -1)
   --chessboard-path CHESSBOARD_PATH
                         Folder path to chessboard files (default: None)
   --chessboard WIDTH HEIGHT
