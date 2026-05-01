@@ -28,6 +28,30 @@ Data output should include:
 
  - camera coordinates into robot coordinates using hand-eye calibration.
 
+## Usage
+
+Fill config.py with the configuration, such as:
+```bash
+CAMERA_INDEX=0
+MARKER_DICTIONARY=cv2.aruco.DICT_6X6_50
+MARKER_IDS=[1,3,10,25,33]
+MARKER_SIZE_MM=100
+DATA_RAW_PATH="data/raw/project2"
+DATA_PROCESSED_PATH="data/processed/project2"
+DATA_IGNORED_PATH="data/ignored"
+CAMERA_PATH="data/ignored/camera/camera.json"
+```
+
+Get camera index with the command ( /dev/video{CAMERA_INDEX} ) :
+```bash
+v4l2-ctl --list-devices
+```
+
+Run main, press q to quit application
+```bash
+python -m src.project2_ArUcoMarker.main
+```
+
  ## Result
 
  <div style="display: flex; justify-content: space-around">

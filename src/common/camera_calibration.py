@@ -10,6 +10,9 @@ from typing import Callable, Optional, Sequence, Tuple
 
 from cv2.typing import MatLike
 
+from common.launcher import Launcher, LauncherParameters
+from project2_ArUcoMarker.config import LAUNCH_OPTION
+from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.colors import Colors
 from src.common.camera import Camera
 from src.common.file_utils import get_files_by_extension, is_path_valid
@@ -17,8 +20,6 @@ from src.common.utils import grayscale
 from src.common.visualization import capture_video, show_image
 
 DEFAULT_CHESSBOARD=(8,8)
-
-
 
 class CameraCalibrationParameters:
     def __init__( self, 
@@ -44,72 +45,7 @@ class CameraCalibrationParameters:
             f"Calibration folder: {self.calibration_path}"
         )
 
-class LiveCameraCalibrationMenu:
-    def __init__(self, parameters:CameraCalibrationParameters):
-        self.parameters = parameters
 
-    def process_key( self, key:int, img:MatLike, process_img:Optional[MatLike] ):
-        if key < 0: return None
-
-        match chr(key):
-            case 'm':
-                print( self.menu() )
-            case 'p':
-                print( self.parameters )
-            case 'a':
-                self.add( img )
-            case 'r':
-                self.remove()
-            case 'c':
-                self.clear()
-            case 's':
-                self.save( img )
-            case _:
-                print( f"Unknown key: {chr(key)}" )
-    
-    def add( self, img:MatLike ):
-        self.parameters.chessboard_images.append( img )
-        print( f"Image added, image cnt: {len(self.parameters.chessboard_images)}")
-
-    def remove( self ):
-        if ( self.parameters.chessboard_image_count() > 0 ):
-            self.parameters.chessboard_images.pop()
-            print( f"Image remove, image cnt: {self.parameters.chessboard_image_count()}")
-
-    def clear( self ):
-        self.parameters.chessboard_images.clear()
-        print( f"Chessboard images cleared" )
-
-    def save( self, img:MatLike ):
-        if ( self.parameters.chessboard_path is None ):
-            print( f"Failed to save img at: {self.parameters.chessboard_path}" )
-            return None
-        
-        img_index = len(self.parameters.chessboard_images)
-        img_fname = "chessboard_" + str(img_index) + ".jpg" 
-        img_fpath = os.path.join( self.parameters.chessboard_path, img_fname )
-        
-        os.makedirs(self.parameters.chessboard_path, exist_ok=True )
-        
-        if ( cv2.imwrite( img_fpath, img ) ):
-            self.add( img )
-            print( f"Chessboard img saved at: {img_fpath}" )
-        else:
-            print( f"Failed to save img at: {img_fpath}" )
-
-    def menu( self ) -> str:
-        return ( 
-            f"========================\n"
-            f"Camera calibration menu:\n"
-            f"========================\n"
-            f"'h': Display menu\n"
-            f"'p': Display calibration parameters\n"
-            f"'a': Add image to calibration images\n"
-            f"'r': Remove last image from calibration images\n"
-            f"'s': Add and Save image to file in {self.parameters.chessboard_path}\n"
-            f"'q': Quit and Save calibration file in {self.parameters.calibration_path}\n"
-            f"========================\n"
-        )
 
 class CameraCalibrationScore:
     class ScoreQuality( Enum ):
@@ -171,7 +107,7 @@ class CameraCalibration:
         return True
 
     @staticmethod
-    def run_from_images( parameters:CameraCalibrationParameters ):
+    def calibrate( parameters:CameraCalibrationParameters ):
         if ( not CameraCalibration.is_valid_parameters( parameters ) ):
             return None
 
@@ -186,7 +122,7 @@ class CameraCalibration:
                        parameters.chessboard_images[0].shape[0] )
 
         for img in parameters.chessboard_images:
-            ret_corner = CameraCalibration._find_chessboard_corners( img, parameters )
+            ret_corner = CameraCalibration.find_chessboard_corners( img, parameters )
             if ret_corner is None:
                 continue
             
@@ -223,39 +159,10 @@ class CameraCalibration:
             print( f"Camera calibration file saved to: {camera_fpath}")
         else:
             print( f"Camera calibration failed:\n{parameters}")
-
-    @staticmethod
-    def run_from_path( parameters:CameraCalibrationParameters, images_directory:str, extension:str=".jpg" ):
-        image_names = get_files_by_extension( images_directory, extension )
-
-        parameters.chessboard_images = []
-        for fname in image_names:
-            img = cv2.imread( fname )
-            if ( img is None ):
-                continue
-            parameters.chessboard_images.append( img )
-
-        CameraCalibration.run_from_images( parameters )
-        
-
-    @staticmethod
-    def run_from_camera( parameters:CameraCalibrationParameters, 
-                         camera_index:int ):
-        def draw_corner_func(img: MatLike) -> MatLike:
-            ret = CameraCalibration._find_chessboard_corners(img, parameters)
-            return ret[1] if ret is not None else img
-        
-        live_menu = LiveCameraCalibrationMenu( parameters )
-        print( live_menu.menu() )
-        
-        capture_video( camera_index, draw_corner_func, live_menu.process_key )
-
-        CameraCalibration.run_from_images( parameters )
-
     
     @staticmethod
-    def _find_chessboard_corners( img:Optional[MatLike], 
-                                  parameters:CameraCalibrationParameters ) -> Optional[tuple[MatLike, MatLike]]:
+    def find_chessboard_corners( img:Optional[MatLike], 
+                                 parameters:CameraCalibrationParameters ) -> Optional[tuple[MatLike, MatLike]]:
         if img is None:
             return None
 
@@ -270,6 +177,62 @@ class CameraCalibration:
             return ( corners, corners_img )
 
         return None
+
+class CameraCalibrationProcessor(ImageProcessor, KeysProcessor):
+    def __init__(self, parameters:CameraCalibrationParameters):
+        self.parameters = parameters
+        self.sub_menus__: dict[str, KeyProcessor] = {
+            'p': KeyProcessor( 'p', "Display calibration parameters", lambda im, proc: print( self.parameters ) ),
+            'a': KeyProcessor( 'a', "Add image to calibration images", lambda im, proc: self.add( im )  ),
+            'r': KeyProcessor( 'r', "Remove last image from calibration images", lambda im, proc: self.remove()  ),
+            'c': KeyProcessor( 'c', "Clear calibration images", lambda im, proc: self.clear()  ),
+            's': KeyProcessor( 's', f"Add and Save image to file in {self.parameters.chessboard_path}", lambda im, proc: self.save( im ) )
+        }
+
+    def add( self, img:MatLike ):
+        self.parameters.chessboard_images.append( img )
+        print( f"Image added, image cnt: {len(self.parameters.chessboard_images)}")
+
+    def remove( self ):
+        if ( self.parameters.chessboard_image_count() > 0 ):
+            self.parameters.chessboard_images.pop()
+            print( f"Image remove, image cnt: {self.parameters.chessboard_image_count()}")
+
+    def clear( self ):
+        self.parameters.chessboard_images.clear()
+        print( f"Chessboard images cleared" )
+
+    def save( self, img:MatLike ):
+        if ( self.parameters.chessboard_path is None ):
+            print( f"Failed to save img at: {self.parameters.chessboard_path}" )
+            return None
+        
+        img_index = len(self.parameters.chessboard_images)
+        img_fname = "chessboard_" + str(img_index) + ".jpg" 
+        img_fpath = os.path.join( self.parameters.chessboard_path, img_fname )
+        
+        os.makedirs(self.parameters.chessboard_path, exist_ok=True )
+        
+        if ( cv2.imwrite( img_fpath, img ) ):
+            self.add( img )
+            print( f"Chessboard img saved at: {img_fpath}" )
+        else:
+            print( f"Failed to save img at: {img_fpath}" )
+
+    def title(self) -> str:
+        return "Camera calibration"
+
+    def sub_menus(self) -> dict[str, KeyProcessor]:
+        return self.sub_menus__
+
+    def quit_menu(self) -> str:
+        return f"Quit and Save calibration file in {self.parameters.calibration_path}"
+
+    def process_img(self, img:MatLike ) -> MatLike:
+        ret = CameraCalibration.find_chessboard_corners( img, self.parameters )
+        if ( ret is not None ):
+            return ret[0]
+        return img
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process chessboard images.")
@@ -326,15 +289,27 @@ if __name__ == "__main__":
     if ( chessboard_path is None ):
         camera_index = camera_index if camera_index >=0 else 0
     
-    #try:
     parameters = CameraCalibrationParameters( chessboard, chessboard_path, output_path )
     print( f"Calibration parameters:\n{parameters}")
 
+    processor = CameraCalibrationProcessor( parameters )
+    launcher_params = LauncherParameters( 
+        camera_index, 
+        parameters.chessboard_path, 
+        ".jpg",
+        None )
+    
     if ( camera_index >= 0 ):
-        print(f"Camera index: {camera_index}")
-        CameraCalibration.run_from_camera( parameters, camera_index )
+        launcher_params.option = LAUNCH_OPTION.CAPTURE_VIDEO
     elif parameters.chessboard_path is not None:
-        print(f"Chessboard Folder Path: {parameters.chessboard_path}")
-        CameraCalibration.run_from_path( parameters, parameters.chessboard_path )
-    # except:
-    #     print( "Camera calibration failed" )
+        launcher_params.option = LAUNCH_OPTION.LOAD_IMAGE
+    else:
+        print( "Camera calibration failed" )
+        pass
+    
+    try:
+        launcher = Launcher( launcher_params, processor, processor )
+        launcher.launch()
+        CameraCalibration.calibrate( parameters )
+    except:
+        print( "Camera calibration failed" )

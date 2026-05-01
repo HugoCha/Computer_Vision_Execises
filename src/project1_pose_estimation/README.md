@@ -31,6 +31,27 @@ Visual output should include:
  - orientation axis
  - rotated bounding box
 
+## Usage
+
+Fill config.py with the configuration, such as:
+```bash
+CAMERA_INDEX=0
+IMAGE_INDEX=0   # index to save image with img{IMAGE_INDEX}.jpg
+DATA_RAW_PATH="data/raw/project1"
+DATA_PROCESSED_PATH="data/processed/project1"
+DATA_IGNORED_PATH="data/ignored"
+```
+
+Get camera index with the command ( /dev/video{CAMERA_INDEX} ) :
+```bash
+v4l2-ctl --list-devices
+```
+
+Run main, press q to quit application
+```bash
+python -m src.project1_pose_estimation.main
+```
+
 ## Result
 
 <div style="display: flex; justify-content: space-around">

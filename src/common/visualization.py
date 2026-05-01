@@ -2,8 +2,12 @@
 
 import cv2
 import numpy as np
+import os
+
 from typing import Callable, List, Optional
 from cv2.typing import MatLike
+
+from src.common.file_utils import get_filename, get_files_by_extension, is_path_valid
 
 def draw_contours(image:MatLike, contours: List[np.ndarray] ) -> MatLike:
     output = image.copy()
@@ -21,10 +25,27 @@ def show_image(image:MatLike, title:str="Result"):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def load_image( full_img_path:str, 
+def load_images( img_folder:str,
+                 img_extension:str=".jpg",
+                 process_img_folder:Optional[str] = None,
+                 func:Optional[Callable[[MatLike], MatLike]] = None,
+                 can_show_image:bool = False ):
+    
+    img_pathes = get_files_by_extension( img_folder, img_extension )
+    
+    for img_fpath in img_pathes:
+        img_fname = get_filename( img_fpath )
+        process_fpath = None
+        if ( is_path_valid( process_img_folder ) ):
+            process_fpath = os.path.join( process_img_folder, img_fname )
+        load_image( img_fpath, process_fpath, func, can_show_image )
+
+
+def load_image( img_path:str, 
                 process_img_path:Optional[str] = None, 
-                func:Optional[Callable[[MatLike], MatLike]] = None ):
-    img = read( full_img_path )
+                func:Optional[Callable[[MatLike], MatLike]] = None,
+                can_show_image:bool = False ):
+    img = read( img_path )
 
     if ( img is None ):
         return
@@ -33,7 +54,11 @@ def load_image( full_img_path:str,
         processed = func( img )
         if ( process_img_path is not None ):
             cv2.imwrite(process_img_path, processed)
-        show_image( processed )
+            if ( can_show_image ):
+                show_image( processed )
+        else:
+            show_image( processed )
+
     else:
         show_image( img )
     
