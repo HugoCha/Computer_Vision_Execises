@@ -79,8 +79,7 @@ class ImageSaver:
     def can_save( self ) -> bool:
         return self.__parameters.is_valid() 
 
-    def save( self, 
-              img:MatLike ) -> bool:
+    def save( self, img:MatLike ) -> bool:
         if ( not self.can_save() ):
             return False
         
