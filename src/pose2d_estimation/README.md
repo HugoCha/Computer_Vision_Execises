@@ -16,8 +16,8 @@ The output should be directly usable by a robotic arm for pick-and-place operati
 ## Deliverable
 
 For each detected object:
-
-```bash
+Return:
+```
 Object 1
 Center: (320, 180)
 Angle: 42°
