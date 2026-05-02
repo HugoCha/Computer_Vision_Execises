@@ -57,6 +57,6 @@ python -m src.pose2d_estimation.main
 ## Result
 
 <div style="display: flex; justify-content: space-around">
-  <img src="/data/raw/project1/img0.jpg" alt="Raw Image" width="45%" />
-  <img src="/data/processed/project1/img0.jpg" alt="Processed Image" width="45%" />
+  <img src="/data/raw/pose2d_estimation/img0.jpg" alt="Raw Image" width="45%" />
+  <img src="/data/processed/pose2d_estimation/img0.jpg" alt="Processed Image" width="45%" />
 </div>
