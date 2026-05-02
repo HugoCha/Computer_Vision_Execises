@@ -2,8 +2,6 @@
 
 import os
 
-from src.common.launcher import LaunchOption
-
 # File and Path
 DATA_RAW_PATH="data/raw/camera"
 DATA_PROCESSED_PATH="data/processed/camera"
