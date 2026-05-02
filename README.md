@@ -1,6 +1,6 @@
-# Computer Vision Exercices
+# Industrial vision & AI lab
 
-Projects for industrial computer vision and robotics training.
+Projects for industrial computer vision and robotics.
 
 ## Projects
 
