@@ -44,7 +44,7 @@ python -m src.camera.camera_calibration --chessboard-path --live False "data/che
 ## Command Configuration
 
 config.py contains the configuration, such as:
-```bash
+```python
 # File and Path
 DATA_RAW_PATH="data/raw/camera"
 DATA_PROCESSED_PATH="data/processed/camera"

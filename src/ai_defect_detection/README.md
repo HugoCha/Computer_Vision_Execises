@@ -4,8 +4,8 @@
 
 Manufactured parts must be classified into:
 
-GOOD
-DEFECTIVE
+ - GOOD
+ - DEFECTIVE
 
 using extracted image features and classical machine learning methods.
 
@@ -13,13 +13,13 @@ This project uses 2 datasets : [good parts](data/processed/parts/good) and [defe
 
 The goal is to compare rule-based vision against ML-based classification.
 
-Models:
+### Models:
 
 Logistic Regression
 Support Vector Machine (SVM)
 Random Forest
 
-Evaluation:
+### Evaluation:
 
 train / test split
 confusion matrix
@@ -28,9 +28,10 @@ false positive vs false negative analysis
 
 ## Deliverable
 
-Example output:
-
+Return:
+```
 Prediction: DEFECTIVE
 Confidence: 92%
+```
 
 Visual output include confusion matrix and feature analysis plots.

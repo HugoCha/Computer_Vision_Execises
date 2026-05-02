@@ -34,7 +34,7 @@ Visual output should include:
 ## Usage
 
 Fill config.py with the configuration, such as:
-```bash
+```python
 # File and Path
 DATA_RAW_PATH="data/raw/pose2d_estimation"
 DATA_PROCESSED_PATH="data/processed/pose2d_estimation"

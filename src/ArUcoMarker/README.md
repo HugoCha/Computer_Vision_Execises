@@ -31,7 +31,7 @@ Data output should include:
 ## Usage
 
 Fill config.py with the configuration, such as:
-```bash
+```python
 # File and path
 DATA_RAW_PATH="data/raw/ArUcoMarker"
 DATA_PROCESSED_PATH="data/processed/ArUcoMarker"
