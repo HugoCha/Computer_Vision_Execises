@@ -7,47 +7,20 @@ import os
 from typing import Optional
 from cv2.typing import MatLike
 
-from src.common.camera import Camera
+from src.camera.camera import Camera
 from src.common.visualization import show_image
+from src.common.pose3d import Pose3d
 
 from .config import *
 
 marker_dict = cv2.aruco.getPredefinedDictionary( MARKER_DICTIONARY ) 
 
-class MarkerPose:
-    def __init__( self, rvec:MatLike, tvec:MatLike, pts:MatLike ):
-        self.rvec = rvec
-        self.tvec = tvec
-        self.pts = pts
-
-        R, _ = cv2.Rodrigues(rvec)
-        transform = np.eye(4)
-        transform[:3, :3] = R
-        transform[:3, 3] = tvec.flatten()
-        self.transform__ = transform
-
-        inverse_transform = np.eye(4)
-        inverse_transform[:3, :3] = R.T
-        inverse_transform[:3, 3] = -R.T @ tvec.reshape(3,)
-        self.inverse_transform__ = inverse_transform
-
-    @property
-    def transform( self ):
-        return self.transform__
-    
-    @property
-    def inverse_transform( self ):
-        return self.inverse_transform__
-    
-    def __str__( self ) -> str:
-        return f"{self.transform}"
-    
 class Marker:
     def __init__( self, id:int, corners: Optional[MatLike] = None, camera:Optional[Camera] = None ):
         self.corners = corners
         self.id = int(id)
         self.camera = camera
-        self.marker_pose__:Optional[MarkerPose] = None
+        self.marker_pose__:Optional[Pose3d] = None
         self.img__: Optional[MatLike] = None
 
     def image( self ) -> MatLike:
@@ -77,7 +50,7 @@ class Marker:
                     0.1 )  
         return img
 
-    def marker_pose( self ) -> Optional[MarkerPose]:
+    def marker_pose( self ) -> Optional[Pose3d]:
         if ( self.marker_pose__ is None and 
              self.corners is not None and 
              self.camera is not None ):
@@ -88,7 +61,7 @@ class Marker:
                     MARKER_SIZE_MM * 1e-3,\
                     self.camera.matrix,\
                     self.camera.distortion )
-            self.marker_pose__ = MarkerPose( rvec, tvec, marker_pts )
+            self.marker_pose__ = Pose3d( rvec, tvec, marker_pts )
         return self.marker_pose__
 
     def save( self, path:str ):

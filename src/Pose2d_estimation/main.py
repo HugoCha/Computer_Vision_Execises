@@ -3,16 +3,16 @@
 from cv2.typing import MatLike
 
 from src.common.launcher import Launcher, LauncherParameters
-from src.common.object_pose import ObjectPose
+from src.common.object_pose2d import ObjectPose2d
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
-from src.common.utils import *
+from src.common.vision_utils import *
 from src.common.visualization import *
 
 from .config import *
 
 class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
     def __init__( self ):
-        self.object_poses:List[ObjectPose] = []
+        self.object_poses:List[ObjectPose2d] = []
         self.sub_menus__: dict[str, KeyProcessor] = {
             'p': KeyProcessor( 'p', "Display obj poses", lambda img,process : self.print_poses() )
         }
@@ -87,7 +87,7 @@ class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
                     -1
                 )
 
-                self.object_poses.append( ObjectPose( center, box ) )
+                self.object_poses.append( ObjectPose2d( center, box ) )
             else:
                 result = get_orientation(hull)
 
@@ -95,7 +95,7 @@ class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
                     continue
                 
                 center, angle, axis = result
-                pose:ObjectPose = ObjectPose( center, box, angle, axis )
+                pose:ObjectPose2d = ObjectPose2d( center, box, angle, axis )
                 self.object_poses.append( pose )
 
                 cv2.circle(

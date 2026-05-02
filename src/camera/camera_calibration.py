@@ -9,12 +9,12 @@ from enum import Enum
 from cv2.typing import MatLike
 from typing import Optional, Sequence
 
-from src.common.camera import Camera
+from src.camera.camera import Camera
 from src.common.colors import Colors
 from src.common.file_utils import is_path_valid
 from src.common.launcher import Launcher, LauncherParameters, LaunchOption
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
-from src.common.utils import grayscale
+from src.common.vision_utils import grayscale
 from src.common.visualization import capture_video, show_image
 
 DEFAULT_CHESSBOARD=(8,8)

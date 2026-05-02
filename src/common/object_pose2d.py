@@ -3,7 +3,7 @@
 from cv2.typing import MatLike
 from typing import Optional
 
-class ObjectPose:
+class ObjectPose2d:
     def __init__( self, 
                   center:tuple[int,int], 
                   bounding_box:MatLike,

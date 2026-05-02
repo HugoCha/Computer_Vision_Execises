@@ -2,10 +2,10 @@
 
 import os
 
-from src.common.camera import Camera
+from src.camera.camera import Camera
 from src.common.launcher import Launcher, LauncherParameters
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
-from src.common.utils import *
+from src.common.vision_utils import *
 from src.common.visualization import *
 
 from .marker import Marker, detect_markers
