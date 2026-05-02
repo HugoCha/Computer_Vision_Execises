@@ -44,8 +44,11 @@ MARKER_SIZE_MM=100
 
 # Launch Parameters
 LAUNCH_OPTION=LaunchOption.CAPTURE_VIDEO
-IMAGE_BASE_NAME="marker"
+IMAGE_LOAD_PATH=os.path.join( DATA_RAW_PATH, "img0.jpg" ) # None : load all images in DATA_RAW_PATH
+IMAGE_BASE_NAME="img"
 IMAGE_EXTENSION=".jpg"
+CAN_OVERRIDE=True
+SHOW_IMAGE=True
 ```
 
 Run main, press q to quit application
