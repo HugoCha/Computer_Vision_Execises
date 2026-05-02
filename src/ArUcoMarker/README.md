@@ -59,5 +59,5 @@ python -m src.ArUcoMarker.main
  ## Result
 
  <div style="display: flex; justify-content: space-around">
-  <img src="/data/processed/project2/img.jpg" alt="Processed Image" />
+  <img src="/data/processed/ArUcoMarker/img.jpg" alt="Processed Image" />
 </div>
