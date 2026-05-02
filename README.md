@@ -4,6 +4,7 @@ Projects for industrial computer vision and robotics.
 
 ## Projects
 
+- Camera calibration
 - Object pose estimation
 - ArUco marker pose estimation
 - Surface defect detection
