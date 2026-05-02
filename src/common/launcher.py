@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
-import os
-
 from enum import Enum
 from typing import Optional
 
-from src.common.file_utils import is_path_valid, is_directory, is_valid_image_extension
-from src.common.visualization import capture_image, capture_video, load_image, load_images
+from src.common.image_loader import ImageLoader, ImageLoaderParameters
+from src.common.image_saver import ImageSaver, ImageSaverParameters
 from src.common.processors import DefaultImageProcessor, DefaultKeysProcessor, ImageProcessor, KeysProcessor
+from src.common.visualization import capture_image, capture_video, load_image, load_images
 
 class LaunchOption(Enum):
     CAPTURE_VIDEO=0
@@ -16,45 +15,47 @@ class LaunchOption(Enum):
 
 class LauncherParameters:
     def __init__( self, 
+                  img_loader_params:ImageLoaderParameters,
+                  img_saver_params:ImageSaverParameters,
+                  process_img_saver_params:ImageSaverParameters,
                   camera_index:Optional[int]=None,
-                  image_path:Optional[str]=None,
-                  image_extension:Optional[str]=None,
-                  process_image_path:Optional[str]=None,
-                  option:LaunchOption = LaunchOption.CAPTURE_VIDEO ):
+                  option:LaunchOption = LaunchOption.CAPTURE_VIDEO,
+                  show_img = False ):
         self.camera_index = camera_index
-        self.image_path = image_path
-        self.image_extension = image_extension
-        self.process_image_path = process_image_path
+        self.img_loader_params = img_loader_params
+        self.img_saver_params = img_saver_params
+        self.process_img_saver_params = process_img_saver_params
         self.option = option
+        self.show_img = show_img
 
 class Launcher:
     def __init__( self, 
                  parameters:LauncherParameters, 
                  img_processor:ImageProcessor = DefaultImageProcessor(),
-                 key_processor:KeysProcessor = DefaultKeysProcessor() ):
+                 key_processor:Optional[KeysProcessor] = None ):
         self.parameters = parameters
-        self.img_processor___ = img_processor
-        self.key_processor___ = key_processor
+        self.__img_loader = ImageLoader( parameters.img_loader_params )
+        self.__img_saver = ImageSaver( parameters.img_saver_params )
+        self.__process_img_saver = ImageSaver( parameters.process_img_saver_params )
+        self.__img_processor = img_processor
+        
+        if ( key_processor ):
+            self.__key_processor = key_processor
+        else:
+            self.__key_processor = DefaultKeysProcessor( parameters.img_saver_params, parameters.process_img_saver_params )
 
     def is_valid_parameters( self ):
         is_camera_index_valid = self.parameters.camera_index is not None and\
                                 self.parameters.camera_index >= 0
-        
-        is_image_path_valid = is_path_valid( self.parameters.image_path )
 
         match self.parameters.option:
             case LaunchOption.CAPTURE_VIDEO:
                 return is_camera_index_valid
             case LaunchOption.CAPTURE_IMAGE:
-                return is_camera_index_valid and is_image_path_valid
+                return is_camera_index_valid and self.__img_saver.can_save()
             case LaunchOption.LOAD_IMAGE:
-                if ( not is_image_path_valid ): return False
-                if ( is_directory( self.parameters.image_path ) ):
-                    return ( self.parameters.image_extension is not None and
-                             is_valid_image_extension( self.parameters.image_extension ) )
-                else:
-                    return os.path.exists( self.parameters.image_path )
-
+                return self.__img_loader.can_load()
+        
         return False
 
     def launch( self ):
@@ -64,26 +65,32 @@ class Launcher:
 
         match self.parameters.option:
             case LaunchOption.CAPTURE_VIDEO:
-                print( self.key_processor___.menu() )
-                capture_video(\
-                    self.parameters.camera_index,\
-                    self.img_processor___.process_img,\
-                    self.key_processor___.process_key )
+                print( self.__key_processor.menu() )
+                capture_video( 
+                    self.parameters.camera_index,
+                    self.__img_processor.process_img,
+                    self.__key_processor.process_key )
             case LaunchOption.CAPTURE_IMAGE:
-                capture_image(\
-                    self.parameters.camera_index,\
-                    self.parameters.image_path,\
-                    self.parameters.process_image_path,\
-                    self.img_processor___.process_img )
+                print( self.__key_processor.menu() )
+                capture_image(
+                    self.parameters.camera_index,
+                    self.__img_processor.process_img,
+                    self.__key_processor.process_key  )
             case LaunchOption.LOAD_IMAGE:
-                if ( is_directory( self.parameters.image_path ) ):
+                if ( self.parameters.show_img ):
+                   print( self.__key_processor.menu() ) 
+
+                if ( self.__img_loader.is_directory() ):
                     load_images(
-                        self.parameters.image_path,\
-                        self.parameters.image_extension,
-                        self.parameters.process_image_path,\
-                        self.img_processor___.process_img )
+                        self.__img_loader,
+                        self.__process_img_saver,
+                        self.__img_processor.process_img,
+                        self.__key_processor.process_key,
+                        self.parameters.show_img )
                 else:
                     load_image(
-                        self.parameters.image_path,\
-                        self.parameters.process_image_path,\
-                        self.img_processor___.process_img )
+                        self.__img_loader,
+                        self.__process_img_saver,
+                        self.__img_processor.process_img,
+                        self.__key_processor.process_key,
+                        self.parameters.show_img )

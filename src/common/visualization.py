@@ -2,12 +2,13 @@
 
 import cv2
 import numpy as np
-import os
 
 from cv2.typing import MatLike
 from typing import Callable, List, Optional
 
-from src.common.file_utils import get_filename, get_files_by_extension, is_path_valid
+from src.common.file_utils import get_files_by_extension
+from src.common.image_loader import ImageLoader
+from src.common.image_saver import ImageSaver
 
 def draw_contours(image:MatLike, contours: List[np.ndarray] ) -> MatLike:
     output = image.copy()
@@ -25,47 +26,54 @@ def show_image(image:MatLike, title:str="Result"):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def load_images( img_folder:str,
-                 img_extension:str=".jpg",
-                 process_img_folder:Optional[str] = None,
+def load_images( image_loader:ImageLoader,
+                 processed_image_saver:ImageSaver,
                  func:Optional[Callable[[MatLike], MatLike]] = None,
+                 process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] = None,
                  can_show_image:bool = False ):
-    
-    img_pathes = get_files_by_extension( img_folder, img_extension )
-    
-    for img_fpath in img_pathes:
-        img_fname = get_filename( img_fpath )
-        process_fpath = None
-        if ( is_path_valid( process_img_folder ) ):
-            process_fpath = os.path.join( process_img_folder, img_fname )
-        load_image( img_fpath, process_fpath, func, can_show_image )
-
-
-def load_image( img_path:str, 
-                process_img_path:Optional[str] = None, 
-                func:Optional[Callable[[MatLike], MatLike]] = None,
-                can_show_image:bool = False ):
-    img = read( img_path )
-
-    if ( img is None ):
+    if ( not image_loader.can_load() ):
         return
     
-    if ( func is not None ):
-        processed = func( img )
-        if ( process_img_path is not None ):
-            cv2.imwrite(process_img_path, processed)
-            if ( can_show_image ):
-                show_image( processed )
-        else:
-            show_image( processed )
+    img_pathes = get_files_by_extension( image_loader.get_dirpath(), image_loader.get_extension() )
+    
+    for img_fpath in img_pathes:
+        loader = ImageLoader.from_filepath( img_fpath )
+        if ( loader is not None ):
+            load_image( loader, processed_image_saver, func, process_key, can_show_image )
 
-    else:
-        show_image( img )
+def load_image( image_loader:ImageLoader,
+                processed_image_saver:ImageSaver,
+                process_img:Optional[Callable[[MatLike], MatLike]] = None,
+                process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] = None,
+                can_show_image:bool = False ):
+    load = image_loader.load()
+
+    if ( not len(load) ):
+        return
+    
+    img = load[0]
+    processed = None
+
+    img_to_process = img
+    if can_show_image:
+        img_to_process = img.copy()
+
+    if ( process_img is not None ):
+        processed = process_img( img_to_process )
+
+    if ( can_show_image ):
+        cv2.imshow( "original", img )
+        if ( processed is not None ): cv2.imshow( "processed", processed )
+        _start_process_key_loop( img, processed, process_key )
+    elif processed is not None:
+        processed_image_saver.save( processed )
+    
+    cv2.destroyAllWindows()
+
     
 def capture_image( camera_index:int, 
-                   full_img_path:str, 
-                   process_img_path:Optional[str] = None,
-                   func:Optional[Callable[[MatLike], MatLike]] = None ):
+                   process_img:Optional[Callable[[MatLike], MatLike]] = None,
+                   process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] = None ):
     cap = cv2.VideoCapture(camera_index)
 
     if not cap.isOpened():
@@ -74,15 +82,14 @@ def capture_image( camera_index:int,
 
     ret, frame = cap.read()
     if ret:
-        cv2.imwrite(full_img_path, frame)
-        print(f"Image saved as {full_img_path}.")
+        cv2.imshow("capture", frame)
 
-        if ( func is not None ):
-            processed = func( frame )
-            if ( process_img_path is not None ):
-                cv2.imwrite(process_img_path, processed)
+        processed = None
+        if ( process_img is not None ):
+            processed = process_img( frame.copy() )
+            cv2.imshow("processed", frame)
 
-            show_image( processed )
+        _start_process_key_loop( frame, processed, process_key )
 
     cap.release()
     cv2.destroyAllWindows()
@@ -98,25 +105,44 @@ def capture_video( camera_index:int,
 
     while True:
         ret, frame = cap.read()
-        img = None
+        processed = None
         if ret:
             if ( process_img is not None ):
-                img = process_img( frame )
+                processed = process_img( frame.copy() )
             else:
-                img = frame
+                processed = frame
 
-            cv2.imshow( 'camera', img )
+            cv2.imshow( 'camera', processed )
+            
+            if ( not _process_key_loop( frame, processed, process_key ) ):
+                break
 
         else:
             print("Error: Could not capture frame.")
 
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
-        elif key < 0:
-            continue 
-        elif process_key:
-            process_key( key, frame, img )
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+def _process_key_loop( 
+        img:MatLike,
+        process:Optional[MatLike],
+        process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] ) -> bool:
+    key = cv2.waitKey(1)
+    
+    if key == ord('q'):
+        return False
+
+    if key >= 0 and process_key:
+        process_key( key, img, process )
+    
+    return True
+
+def _start_process_key_loop(
+                img:MatLike,
+        process:Optional[MatLike],
+        process_key:Optional[Callable[[int, MatLike, Optional[MatLike]],None]] ):
+    
+    while ( _process_key_loop( img, process, process_key ) ):
+        continue

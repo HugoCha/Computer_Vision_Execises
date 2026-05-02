@@ -33,32 +33,24 @@ Data output should include:
 Fill config.py with the configuration, such as:
 ```bash
 # File and path
-DATA_RAW_PATH="data/raw/project2"
-DATA_PROCESSED_PATH="data/processed/project2"
+DATA_RAW_PATH="data/raw/ArUcoMarker"
+DATA_PROCESSED_PATH="data/processed/ArUcoMarker"
 DATA_IGNORED_PATH="data/ignored"
-CAMERA_PATH="data/ignored/camera/camera.json"
 
 # Markers
 MARKER_DICTIONARY=cv2.aruco.DICT_6X6_50
-MARKER_IDS=[1,3,10,25, 33]
+MARKER_IDS=[1,3,10,25,33]
 MARKER_SIZE_MM=100
 
 # Launch Parameters
 LAUNCH_OPTION=LaunchOption.CAPTURE_VIDEO
-CAMERA_INDEX=2
+IMAGE_BASE_NAME="marker"
 IMAGE_EXTENSION=".jpg"
-IMAGE_PATH=os.path.join( DATA_RAW_PATH, f"img{IMAGE_EXTENSION}" )
-IMAGE_PROCESS_PATH=os.path.join( DATA_PROCESSED_PATH, f"img{IMAGE_EXTENSION}" )
-```
-
-Get camera index with the command ( /dev/video{CAMERA_INDEX} ) :
-```bash
-v4l2-ctl --list-devices
 ```
 
 Run main, press q to quit application
 ```bash
-python -m src.project2_ArUcoMarker.main
+python -m src.ArUcoMarker.main
 ```
 
  ## Result

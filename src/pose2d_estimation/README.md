@@ -36,27 +36,19 @@ Visual output should include:
 Fill config.py with the configuration, such as:
 ```bash
 # File and Path
-DATA_RAW_PATH="data/raw/project1"
-DATA_PROCESSED_PATH="data/processed/project1"
+DATA_RAW_PATH="data/raw/pose2d_estimation"
+DATA_PROCESSED_PATH="data/processed/pose2d_estimation"
 DATA_IGNORED_PATH="data/ignored"
-IMAGE_INDEX=0
 
 # Launch Parameters
 LAUNCH_OPTION=LaunchOption.LOAD_IMAGE
-CAMERA_INDEX=2 # index associated with camera in /dev/video(*)
+IMAGE_BASE_NAME="img"
 IMAGE_EXTENSION=".jpg"
-IMAGE_PATH=DATA_RAW_PATH#os.path.join( DATA_RAW_PATH, "img" + str( IMAGE_INDEX ) + IMAGE_EXTENSION )
-IMAGE_PROCESS_PATH=None#os.path.join( DATA_PROCESSED_PATH, "img" + str( IMAGE_INDEX ) + IMAGE_EXTENSION )
-```
-
-Get camera index with the command ( /dev/video{CAMERA_INDEX} ) :
-```bash
-v4l2-ctl --list-devices
 ```
 
 Run main, press q to quit application
 ```bash
-python -m src.project1_pose_estimation.main
+python -m src.pose2d_estimation.main
 ```
 
 ## Result

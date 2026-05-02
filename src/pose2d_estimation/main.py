@@ -3,20 +3,26 @@
 from cv2.typing import MatLike
 
 from src.camera.config import CAMERA_INDEX
+from src.common.image_loader import ImageLoaderParameters
+from src.common.image_saver import ImageSaverParameters
 from src.common.launcher import Launcher, LauncherParameters
 from src.common.object_pose2d import ObjectPose2d
-from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
+from src.common.processors import ImageProcessor, KeyProcessor, DefaultKeysProcessor
 from src.common.vision_utils import *
 from src.common.visualization import *
 
 from .config import *
 
-class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
-    def __init__( self ):
+class PoseEstimationProcessor( ImageProcessor, DefaultKeysProcessor ):
+    def __init__( self,
+                  img_saver_params:ImageSaverParameters, 
+                  process_img_saver_params:ImageSaverParameters ):
+        DefaultKeysProcessor.__init__( self, img_saver_params, process_img_saver_params )
+
         self.object_poses:List[ObjectPose2d] = []
-        self.sub_menus__: dict[str, KeyProcessor] = {
-            'p': KeyProcessor( 'p', "Display obj poses", lambda img,process : self.print_poses() )
-        }
+        self.sub_menus().update( {
+            'd': KeyProcessor( 'd', "Display obj poses", lambda img,process : self.print_poses() )
+        } )
 
     def process_img( self, img:MatLike ) -> MatLike:
         self.object_poses.clear()
@@ -130,16 +136,33 @@ class PoseEstimationProcessor( ImageProcessor, KeysProcessor ):
     def title( self ) -> str:
         return "Pose estimation"
     
-    def sub_menus(self) -> dict[str, KeyProcessor]:
-        return self.sub_menus__
-    
     def print_poses( self ):
         for obj in self.object_poses:
             print( obj )
 
 def main():
-    processor = PoseEstimationProcessor()
-    launcher_params = LauncherParameters( CAMERA_INDEX, IMAGE_PATH, IMAGE_EXTENSION, IMAGE_PROCESS_PATH, LAUNCH_OPTION )
+
+    img_loader_params = None
+    if ( IMAGE_LOAD_PATH is not None ):
+        img_loader_params = ImageLoaderParameters.from_filepath( IMAGE_LOAD_PATH )
+    if ( img_loader_params is None or not img_loader_params.is_valid() ):
+        img_loader_params = ImageLoaderParameters( DATA_RAW_PATH, IMAGE_EXTENSION, None )
+
+    img_saver_params = ImageSaverParameters( DATA_RAW_PATH, IMAGE_BASE_NAME, IMAGE_EXTENSION, CAN_OVERRIDE )
+    process_img_saver_params = ImageSaverParameters( DATA_PROCESSED_PATH, IMAGE_BASE_NAME, IMAGE_EXTENSION, CAN_OVERRIDE )
+    
+    processor = PoseEstimationProcessor(
+        img_saver_params,
+        process_img_saver_params )
+    
+    launcher_params = LauncherParameters( 
+        img_loader_params,
+        img_saver_params,
+        process_img_saver_params,
+        CAMERA_INDEX, 
+        LAUNCH_OPTION,
+        SHOW_IMAGE )
+    
     launcher = Launcher( launcher_params, processor, processor )
     launcher.launch()
 

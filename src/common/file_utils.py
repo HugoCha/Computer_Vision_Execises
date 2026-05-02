@@ -9,7 +9,7 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx", ".xlsx", ".pptx"}
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
-def is_path_valid(path: Optional[str] ) -> bool:
+def is_valid_path(path: Optional[str] ) -> bool:
     if path is None:
         return False
     
@@ -18,6 +18,15 @@ def is_path_valid(path: Optional[str] ) -> bool:
         return True
     except (TypeError, ValueError):
         return False
+    
+def is_valid_filename(filename: str) -> bool:
+    if '\0' in filename or '/' in filename:
+        return False
+    
+    if not filename:
+        return False
+    
+    return True
     
 def is_valid_image_extension( extension:str ):
     return extension.lower() in IMAGE_EXTENSIONS

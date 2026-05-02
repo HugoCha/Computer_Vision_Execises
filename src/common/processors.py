@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from cv2.typing import MatLike
 from typing import Callable, Optional
 
+from src.common.image_saver import ImageSaver, ImageSaverParameters
+
 class ImageProcessor(ABC):
     @abstractmethod
     def process_img( self, img:MatLike ) -> MatLike:
@@ -34,7 +36,7 @@ class KeysProcessor(ABC):
     @abstractmethod
     def sub_menus( self ) -> dict[str,KeyProcessor]:
         pass
-
+    
     def quit_menu( self ) -> str:
         return "Quit"
 
@@ -57,11 +59,28 @@ class DefaultImageProcessor(ImageProcessor):
         return img
     
 class DefaultKeysProcessor(KeysProcessor):
-    def process_key( self, key:int, img:MatLike, process:Optional[MatLike] ) -> None:
-        return None
+    def __init__( self, 
+                  img_saver_params:ImageSaverParameters,
+                  process_img_saver_params:ImageSaverParameters, ):
+        self.__raw_img_saver = ImageSaver( img_saver_params )
+        self.__process_img_saver = ImageSaver( process_img_saver_params )
+        
+        self.__sub_menus:dict[str, KeyProcessor] = {
+            'o': KeyProcessor( 'o', f"Save original image in :{self.__raw_img_saver.get_dirpath()}", lambda im, proc : self.__raw_img_saver.save( im ) ),
+            'm': KeyProcessor( 'm', f"Save modified image in :{self.__process_img_saver.get_dirpath()}", lambda im, proc : self.__process_img_saver.save( proc ) ),
+            'b': KeyProcessor( 'b', f"Save original and modified image in :{self.__raw_img_saver.get_dirpath()}, {self.__process_img_saver.get_dirpath()}", lambda im, proc : self.__raw_img_saver.save( im ) and self.__process_img_saver.save( proc ) )
+        }
 
     def title( self ) -> str:
         return "Default menu"
     
+    @property
+    def raw_image_saver( self ):
+        return self.__raw_img_saver
+    
+    @property
+    def processed_image_saver( self ):
+        return self.__process_img_saver
+    
     def sub_menus(self) -> dict[str, KeyProcessor]:
-        return {}
+        return self.__sub_menus
