@@ -2,6 +2,7 @@
 
 from cv2.typing import MatLike
 
+from src.camera.config import CAMERA_INDEX
 from src.common.launcher import Launcher, LauncherParameters
 from src.common.object_pose2d import ObjectPose2d
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor

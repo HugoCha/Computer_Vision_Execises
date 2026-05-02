@@ -3,6 +3,7 @@
 import os
 
 from src.camera.camera import Camera
+from src.camera.config import CAMERA_PATH, CAMERA_INDEX
 from src.common.launcher import Launcher, LauncherParameters
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.vision_utils import *
