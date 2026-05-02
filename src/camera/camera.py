@@ -33,8 +33,6 @@ class Camera:
         return (
             f"Matrix:\n{self.matrix}\n"
             f"Distortion:\n{self.distortion}\n"
-            f"Rvecs:\n{self.rvecs}\n"
-            f"Tvecs:\n{self.tvecs}"
         )
 
     @classmethod
