@@ -1,4 +1,4 @@
-# Project 1 — Object Pose Estimation for Pick-and-Place
+# Object Pose Estimation for Pick-and-Place
 
 ## Statement
 
