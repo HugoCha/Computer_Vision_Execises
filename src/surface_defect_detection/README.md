@@ -6,11 +6,11 @@ A production line must reject defective manufactured parts.
 
 The objective is to detect defects such as:
 
-scratches
-missing holes
-broken corners
-missing features
-false marks
+ - scratches
+ - missing holes
+ - broken corners
+ - missing features
+ - false marks
 
 by comparing the inspected part against a reference good part.
 
