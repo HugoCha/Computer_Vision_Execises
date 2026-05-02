@@ -1,4 +1,4 @@
-# Project 2 — ArUco Marker Detection and Pose Estimation
+# ArUco Marker Detection and Pose Estimation
 
 ## Statement
 
