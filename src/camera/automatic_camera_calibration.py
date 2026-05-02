@@ -8,8 +8,8 @@ from cv2.typing import MatLike
 from typing import Optional
 
 from src.camera.camera import Camera
-from src.common.image_loader import ImageLoader, ImageLoaderParameters
-from src.common.image_saver import ImageSaver, ImageSaverParameters
+from src.common.image_loader import ImageLoaderParameters
+from src.common.image_saver import ImageSaverParameters
 from src.common.launcher import Launcher, LauncherParameters, LaunchOption
 from src.common.processors import ImageProcessor, KeyProcessor, KeysProcessor
 

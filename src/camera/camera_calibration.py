@@ -1,23 +1,15 @@
 #!/usr/bin/python3
 
-import argparse
 import cv2
 import numpy as np
 import os
 
-from enum import Enum
 from cv2.typing import MatLike
-from typing import Optional, Sequence
+from typing import Optional
 
 from src.camera.camera import Camera
-from src.common.colors import Colors
 from src.common.file_utils import is_directory, is_valid_path
-from src.common.image_loader import ImageLoader, ImageLoaderParameters
-from src.common.image_saver import ImageSaver, ImageSaverParameters
-from src.common.launcher import Launcher, LauncherParameters, LaunchOption
-from src.common.processors import DefaultKeysProcessor, ImageProcessor, KeyProcessor, KeysProcessor
 from src.common.vision_utils import grayscale
-from src.common.visualization import capture_video, show_image
 
 from .camera_calibration_score import CameraCalibrationScore
 from .config import *
@@ -27,13 +19,11 @@ class CameraCalibrationParameters:
                   chessboard:tuple[int,int], 
                   chessboard_path:Optional[str],
                   calibration_path:str,
-                  chessboard_images:list[MatLike] = [],
-                  show_corner_image:bool = False ):
+                  chessboard_images:list[MatLike] = [] ):
         self.chessboard = chessboard
         self.chessboard_images = chessboard_images
         self.chessboard_path = chessboard_path
         self.calibration_path = calibration_path
-        self.show_corner_image = show_corner_image
 
     def chessboard_image_count( self ) -> int:
         return len( self.chessboard_images )
@@ -86,9 +76,6 @@ class CameraCalibration:
             corners, corner_img = ret_corner
             objpoints.append(objp.copy())
             imgpoints.append(corners)
-
-            if ( parameters.show_corner_image ):
-                show_image( corner_img, "corners" )
 
         if len(objpoints) == 0 or len(imgpoints) == 0:
             print( f"Camera calibration failed: Unable to extract points from images" )

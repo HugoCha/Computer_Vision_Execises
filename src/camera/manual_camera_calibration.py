@@ -1,23 +1,13 @@
 #!/usr/bin/python3
 
 import argparse
-import cv2
-import numpy as np
-import os
 
-from enum import Enum
 from cv2.typing import MatLike
-from typing import Optional, Sequence
 
-from src.camera.camera import Camera
-from src.common.colors import Colors
-from src.common.file_utils import is_directory, is_valid_path
 from src.common.image_loader import ImageLoader, ImageLoaderParameters
-from src.common.image_saver import ImageSaver, ImageSaverParameters
+from src.common.image_saver import ImageSaverParameters
 from src.common.launcher import Launcher, LauncherParameters, LaunchOption
 from src.common.processors import DefaultKeysProcessor, ImageProcessor, KeyProcessor, KeysProcessor
-from src.common.vision_utils import grayscale
-from src.common.visualization import capture_video, show_image
 
 from .camera_calibration import CameraCalibrationParameters, CameraCalibration
 from .config import *
