@@ -66,6 +66,6 @@ SHOW_IMAGE=False
 ## Live Calibration
 
  <div style="display: flex; justify-content: space-around">
-  <img src="/data/processed/camera/img0.jpg" alt="Processed Image" />
+  <img src="/data/processed/camera/chessboard0.jpg" alt="Processed Image" />
 </div>
 
